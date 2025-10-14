@@ -12,9 +12,11 @@ public class Shooter : MonoBehaviour
 
     private void Update()
     {
+        //左クリックかつ、攻撃フラグがOFF
         if (Input.GetMouseButtonDown(0) && !isAttack) Shot();
     }
 
+    //ショットメソッド
     void Shot()
     {
         //攻撃中フラグをON
@@ -23,12 +25,8 @@ public class Shooter : MonoBehaviour
         GameObject obj = Instantiate(
             bulletPrefab,
             gate.transform.position,
-            Quaternion.Euler(
-                Camera.main.transform.localEulerAngles.x - 90, //x軸に対して90度回転してカメラ角度に合わせる
-                Camera.main.transform.localEulerAngles.y,
-                Camera.main.transform.localEulerAngles.z
-                )
-        );
+            gate.transform.rotation * Quaternion.Euler(90, 0, 0)
+            );
 
         //カメラの方向に弾を飛ばす
         Vector3 v = Camera.main.transform.forward;

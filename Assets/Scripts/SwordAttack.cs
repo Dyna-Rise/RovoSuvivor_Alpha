@@ -34,7 +34,7 @@ public class SwordAttack : MonoBehaviour
                 swordCollider.transform.rotation
                 );
             //エフェクトをソードの子オブジェクトにして位置を同期させる
-            obj.transform.parent = swordCollider.transform;
+            obj.transform.SetParent(swordCollider.transform);
 
             //攻撃処理
         }
