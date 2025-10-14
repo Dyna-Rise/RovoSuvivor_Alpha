@@ -8,5 +8,4 @@ public class Sword : MonoBehaviour
     {
         Destroy(gameObject, deleteTime);
     }
-
 }

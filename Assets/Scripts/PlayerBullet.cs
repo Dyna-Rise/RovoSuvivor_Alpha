@@ -15,5 +15,9 @@ public class PlayerBullet : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        else if (other.gameObject.CompareTag("Enemy"))
+        {
+            Destroy(other.gameObject);
+        }
     }
 }
