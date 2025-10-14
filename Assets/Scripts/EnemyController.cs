@@ -210,6 +210,6 @@ public class EnemyController : MonoBehaviour
     void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(transform.position, attackRange);
-        Gizmos.DrawWireSphere(transform.position, stopRange);
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
 }
