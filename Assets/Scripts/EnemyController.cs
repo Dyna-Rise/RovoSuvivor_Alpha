@@ -7,13 +7,12 @@ public class EnemyController : MonoBehaviour
 {    
     public int enemyHP = 5; //敵のHP
     public float enemySpeed = 5.0f; //敵のスピード
-    public float enemySlowSpeed = 1.0f; //敵のスピードを緩める
+    public float enemySlowSpeed = 2.5f; //敵のスピードを緩める
 
     bool isDamage;　//ダメージ中フラグ
     
 
-    public bool onBullet; //Bulletにあたっているか
-
+    
     public GameObject body; //点滅されるbody
 
     GameObject player;      // プレイヤーのTransformをInspectorから設定
@@ -54,11 +53,14 @@ public class EnemyController : MonoBehaviour
         navMeshAgent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player");
 
+        //GameManager取得
+        gameMgr = GameObject.Find("GameManager");
+
         //時間差でシュート可能にする
         Invoke("ShootEnabled", 0.5f);
 
         //エネミーのTransform情報の取得
-        enemy = GameObject.FindGameObjectWithTag("Enemy").transform;
+        enemy = transform;
         //エネミーについているGateオブジェクト情報の取得
         gate = enemy.Find("Gate").gameObject;
 
@@ -82,16 +84,20 @@ public class EnemyController : MonoBehaviour
             //もしもプレイヤーにある程度近づいたら、近づく速度を緩めてプレイヤーに向かってShot
             if (distance < attackRange)
             {
-                enemySpeed = enemySlowSpeed;
+                navMeshAgent.speed = enemySlowSpeed; //減速させる
                 navMeshAgent.isStopped = false;
                 navMeshAgent.SetDestination(player.transform.position);
-                // プレイヤーの高さ（Y軸）を無視して、水平に向く
-                Vector3 targetPosition = new Vector3(
-                    player.transform.position.x,
-                    transform.position.y, // 自分の高さを維持
-                    player.transform.position.z
-                    );
-                transform.LookAt(targetPosition);
+
+                if (lockOn)
+                {
+                    // プレイヤーの高さ（Y軸）を無視して、水平に向く
+                    Vector3 targetPosition = new Vector3(
+                        player.transform.position.x,
+                        transform.position.y, // 自分の高さを維持
+                        player.transform.position.z
+                        );
+                    transform.LookAt(targetPosition);
+                }
 
                 //タイマー加算
                 timer += Time.deltaTime;
@@ -106,6 +112,7 @@ public class EnemyController : MonoBehaviour
             }
             else
             {
+                navMeshAgent.speed = enemySpeed; //元の速度に戻す
                 navMeshAgent.isStopped = false;
                 navMeshAgent.SetDestination(player.transform.position);
             }
@@ -154,28 +161,44 @@ public class EnemyController : MonoBehaviour
 
     private void OnTriggerEnter(Collider collision)
     {
+        if (enemyHP <= 0) return;
+
         if (collision.gameObject.CompareTag("PlayerBullet"))
         {
-            if (onBullet) return;
+            if (isDamage) return;
 
             enemyHP--;
             if (enemyHP > 0)
             {
-                onBullet = true;
+                isDamage = true;
                 StartCoroutine(Damaged());
             }
             else
             {
-                Destroy(gameObject);
+                Die();
             }
 
+        }
+        else if(collision.gameObject.CompareTag("PlayerSword"))
+        {
+            enemyHP -= 3; //3倍ダメージ
+
+            if(enemyHP > 0)
+            {
+                isDamage = true;
+                StartCoroutine(Damaged());
+            }
+            else
+            {
+                Die();
+            }
         }
     }
 
     IEnumerator Damaged()
     {
         yield return new WaitForSeconds(5);
-        onBullet = false;
+        isDamage = false;
         //描画機能を有効
         GetComponent<SpriteRenderer>().enabled = true;
     }
@@ -192,10 +215,13 @@ public class EnemyController : MonoBehaviour
         //エネミーが消滅していなければ
         if (enemy == null) return;
 
-        //エネミーの位置にenemybulletを生成
-        Quaternion rotation = Quaternion.Euler(180f, 0f, 0f);
+        isAttack = true;
+        lockOn = false;
 
-        GameObject obj = Instantiate(enemybulletPrefab, gate.transform.position, rotation);
+        //エネミーの位置にenemybulletを生成
+        Quaternion rotation = Quaternion.Euler(0, 90, 90);
+
+        GameObject obj = Instantiate(enemybulletPrefab, gate.transform.position, gate.transform.rotation * rotation);
 
         //生成したenemybulletのRigidbodyを取得
         Rigidbody rbody = obj.GetComponent<Rigidbody>();
@@ -204,7 +230,43 @@ public class EnemyController : MonoBehaviour
         Vector3 v = new Vector3(transform.forward.x * shootSpeed, 0, transform.forward.z * shootSpeed);
 
         rbody.AddForce(v, ForceMode.Impulse);
+
+        StartCoroutine(AttackCooldown());
     }
+
+    IEnumerator AttackCooldown()
+    {
+        yield return new WaitForSeconds(fireInterval);
+        isAttack = false;
+        lockOn = true;
+        timer = 0f;
+    }
+
+
+    void Die()
+    {
+        // GameManagerからenemyListを取得し、最初の要素が自分なら削除
+        if (gameMgr == null)
+        {
+            gameMgr = GameObject.Find("GameManager"); 
+        }
+
+        GameManager gm = gameMgr.GetComponent<GameManager>();
+        if (gm != null && gm.enemyList != null && gm.enemyList.Count > 0)
+        {
+            if (gm.enemyList[0] == this.gameObject)
+            {
+                gm.enemyList.RemoveAt(0);
+            }
+            else
+            {
+                gm.enemyList.Remove(this.gameObject); // 念のため自身を削除
+            }
+        }
+
+        Destroy(gameObject);
+    }
+
 
     // ギズモで範囲を表示（デバッグ用）
     void OnDrawGizmosSelected()
