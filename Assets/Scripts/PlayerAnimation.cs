@@ -5,6 +5,7 @@ public class PlayerAnimation : MonoBehaviour
     public Animator animator;
     bool isDeadAnime;
 
+
     void Update()
     {      
         if (GameManager.gameState != GameState.playing)
@@ -61,6 +62,7 @@ public class PlayerAnimation : MonoBehaviour
         }
     }
 
+  
     void JumpAnimation()
     {
         if (Input.GetKeyDown(KeyCode.Space))

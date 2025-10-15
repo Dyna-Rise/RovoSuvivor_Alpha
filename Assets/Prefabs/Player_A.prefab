@@ -344,6 +344,8 @@ MonoBehaviour:
   jumpForce: 8
   gravity: 20
   body: {fileID: 9008698450713019217}
+  se_Walk: {fileID: 8300000, guid: 33144b636bb27d146b2a7067933c6e7b, type: 3}
+  se_Damage: {fileID: 8300000, guid: 0d30ac30267e842419537598daf5f23d, type: 3}
 --- !u!114 &2316921063428477564
 MonoBehaviour:
   m_ObjectHideFlags: 0

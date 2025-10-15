@@ -15,11 +15,17 @@ public class PlayerController : MonoBehaviour
     public GameObject body;　//点滅対象
     bool isDamage; //ダメージフラグ
 
+    AudioSource audioSource;
+
+    public AudioClip se_Walk;
+    public AudioClip se_Damage;
+
 
     void Start()
     {
         
         controller = GetComponent<CharacterController>();
+        audioSource = GetComponent<AudioSource>();
 
     }
 
@@ -82,11 +88,16 @@ public class PlayerController : MonoBehaviour
 
         if (other.gameObject.CompareTag("Enemy") || other.gameObject.CompareTag("EnemyBullet") || other.gameObject.CompareTag("Barrier"))
         {
-
+           
             if (isDamage) return;
 
             isDamage = true;
             GameManager.playerHP--;
+            if (audioSource != null && se_Damage != null)
+            {
+                audioSource.PlayOneShot(se_Damage);
+            }
+
 
 
             if (GameManager.playerHP <= 0)
