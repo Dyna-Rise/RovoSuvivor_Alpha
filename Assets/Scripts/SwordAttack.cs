@@ -9,6 +9,14 @@ public class SwordAttack : MonoBehaviour
 
     bool isAttack; //攻撃中かどうか
 
+    AudioSource audioSource;
+    [SerializeField] AudioClip se_sword;
+
+    private void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Enemy"))
@@ -22,22 +30,32 @@ public class SwordAttack : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(1) && !isAttack)
         {
-            isAttack = true;
-            StartCoroutine(SwordAttackCoroutine());
-
-            //当たり判定出現
-            swordCollider.SetActive(true);
-            //エフェクトを生成
-            GameObject obj = Instantiate(
-                swordPrefab,
-                swordCollider.transform.position,
-                swordCollider.transform.rotation
-                );
-            //エフェクトをソードの子オブジェクトにして位置を同期させる
-            obj.transform.SetParent(swordCollider.transform);
-
-            //攻撃処理
+            Attack();
         }
+    }
+
+    //攻撃メソッド
+    void Attack()
+    {
+        //攻撃フラグを立てて回復時間の計測を開始
+        isAttack = true;
+        StartCoroutine(SwordAttackCoroutine());
+
+        //アタック音を鳴らす
+        audioSource.PlayOneShot(se_sword);
+
+        //当たり判定出現
+        swordCollider.SetActive(true);
+        //エフェクトを生成
+        GameObject obj = Instantiate(
+            swordPrefab,
+            swordCollider.transform.position,
+            swordCollider.transform.rotation
+            );
+        //エフェクトをソードの子オブジェクトにして位置を同期させる
+        obj.transform.SetParent(swordCollider.transform);
+
+        //ダメージ処理はエネミー側で実行
     }
 
     //回復時間

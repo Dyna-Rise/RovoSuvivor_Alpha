@@ -5,9 +5,9 @@ public class CameraController : MonoBehaviour
     GameObject player; //プレイヤー
     float diff; //プレイヤーとの距離
 
-    [SerializeField] float followSpeed = 8f;
+    [SerializeField] float followSpeed = 8f; //カメラの補間スピード
 
-    //カメラの初期位置
+    //カメラの初期位置（プレイヤー位置のY + 2.5, Z -2.0当たりにするとおおむねUI照準通りに弾が飛ぶ）
     [SerializeField] Vector3 defaultPos = new Vector3(0, 3.5f, -2);
     [SerializeField] Vector3 defaultRotate = new Vector3(20, 0, 0);
 
@@ -26,8 +26,7 @@ public class CameraController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        //位置
-        //カメラを初期位置にセット
+        //カメラを初期位置、角度にセット
         transform.position = defaultPos;
         transform.rotation = Quaternion.Euler(defaultRotate);
 
