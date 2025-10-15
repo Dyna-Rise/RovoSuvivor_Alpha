@@ -4,15 +4,15 @@ using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour
-{    
+{
     public int enemyHP = 5; //敵のHP
     public float enemySpeed = 5.0f; //敵のスピード
     public float enemySlowSpeed = 2.5f; //敵のスピードを緩める
 
-    bool isDamage;　//ダメージ中フラグ
-    
+    bool isDamage; //ダメージ中フラグ
 
-    
+
+
     public GameObject body; //点滅されるbody
 
     GameObject player;      // プレイヤーのTransformをInspectorから設定
@@ -29,21 +29,24 @@ public class EnemyController : MonoBehaviour
     public float fireInterval = 2.0f; //弾を発射するインターバル
     bool lockOn = true; //ターゲット
 
+    const float DamageDuration = 0.5f;
+    float recoverTime = 0.0f;
+
     float timer; //時間経過
 
     GameObject gameMgr; //ゲームマネージャー
 
     public GameObject enemybulletPrefab;
     Transform enemy; //エネミーのtransform情報
-    
+
     public float shootSpeed = 100f; //シュートした時の力
-  
-    
+
+
     public float shootInterval = 2f; //シュートの間隔
 
-    
 
-    bool possibleShoot; //
+
+    bool possibleShoot; //シュートを可能とする
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -76,6 +79,19 @@ public class EnemyController : MonoBehaviour
         //プレイヤーがいない時は何もしない
         if (player == null) return;
 
+        //もしisDamageフラグ中なら点滅
+        if (IsDamage())
+        {
+
+            //復活までの時間をカウント
+            recoverTime -= Time.deltaTime;
+
+            //点滅処理
+            Blinking();
+            return;
+        }
+
+        //攻撃中なら何もしない
         if (isAttack) return;
 
         float distance = Vector3.Distance(transform.position, player.transform.position);
@@ -107,101 +123,162 @@ public class EnemyController : MonoBehaviour
                     Shot();
                     timer = 0f; //タイマーリセット
                 }
-               
+
+                //近接限界処理になったらEnemyを止める
+                if (distance < stopRange)
+                {
+                    navMeshAgent.isStopped = true; //Enemyを止める
+                }
+
 
             }
             else
             {
                 navMeshAgent.speed = enemySpeed; //元の速度に戻す
-                navMeshAgent.isStopped = false;
-                navMeshAgent.SetDestination(player.transform.position);
+                navMeshAgent.isStopped = false; //Enemyを動かす
+                navMeshAgent.SetDestination(player.transform.position); //playerを目的地とする
+
             }
         }
         else
         {
-            navMeshAgent.isStopped = true;
+            navMeshAgent.isStopped = true; //Enemyを止める
         }
+
         
-        
-        
+
     }
 
-        void FixedUpdate()
-        {
-            //playingモードでないと何もしない
-            if (GameManager.gameState != GameState.playing) return;
+    void FixedUpdate()
+    {
+        //playingモードでないと何もしない
+        if (GameManager.gameState != GameState.playing) return;
 
-            //プレイヤーがいない時は何もしない
-            if (player == null) return;
+        //プレイヤーがいない時は何もしない
+        if (player == null) return;
 
-            //playerBulletとplayerSwordに触れている時は何もしない
-            if (isDamage)
-            {
-
-
-                float val = Mathf.Sin(Time.time * 50);
-                if (val > 0)
-                {
-                    //描画機能を有効
-                    GetComponent<SpriteRenderer>().enabled = true;
-                }
-                else
-                {
-                    //描画機能を無効
-                    GetComponent<SpriteRenderer>().enabled = false;
-                }
-
-                return;
-            }
+        ////playerBullet又はplayerSwordによるダメージ中は点滅処理
+        //if (isDamage && body != null)
+        //{
 
 
-        }
-    
+        //    float val = Mathf.Sin(Time.time * 50);
+        //    if (val > 0)
+        //    {
+        //        //描画機能を有効
+        //        body.GetComponent<Renderer>().enabled = true;
+        //    }
+        //    else
+        //    {
+        //        //描画機能を無効
+        //        body.GetComponent<Renderer>().enabled = false;
+        //    }
+
+        //    return;
+        //}
+
+
+    }
+
 
 
     private void OnTriggerEnter(Collider collision)
     {
-        if (enemyHP <= 0) return;
+        if (IsDamage()) return;
+        ////EnemyHPが0なら何もしない
+        //if (enemyHP <= 0) return;
 
+        //PlayerBulletに当たったら-1ダメージ
         if (collision.gameObject.CompareTag("PlayerBullet"))
         {
-            if (isDamage) return;
 
             enemyHP--;
-            if (enemyHP > 0)
-            {
-                isDamage = true;
-                StartCoroutine(Damaged());
-            }
-            else
+
+            //enemyHPが0より多ければDamageフラグをtrueにしてDamageメソッド発動
+            if (enemyHP <= 0)
             {
                 Die();
+                return;
             }
+            //recoverTimeの時間を設定
+            recoverTime = DamageDuration;
+            isDamage = true;
 
         }
-        else if(collision.gameObject.CompareTag("PlayerSword"))
+        //PlayerSwordに当たったら3倍ダメージ
+        else if (collision.gameObject.CompareTag("PlayerSword"))
         {
-            enemyHP -= 3; //3倍ダメージ
+            enemyHP -= 3;
 
-            if(enemyHP > 0)
+            //enemyHPが0でDieメソッド発動
+            if (enemyHP <= 0)
             {
-                isDamage = true;
-                StartCoroutine(Damaged());
-            }
-            else
-            {
+                //isDamage = true;
                 Die();
+                return;
+
             }
+            //recoverTimeの時間を設定
+            recoverTime = DamageDuration;
+            isDamage = true;
         }
     }
 
-    IEnumerator Damaged()
+    //IEnumerator Damaged()
+    //{
+    //    //3秒待ってisDamageフラグをfalseにする
+    //    yield return new WaitForSeconds(2);
+    //    isDamage = false;
+    //    //描画機能を有効
+    //    body.GetComponent<Renderer>().enabled = true;
+    //}
+
+    bool IsDamage()
     {
-        yield return new WaitForSeconds(5);
-        isDamage = false;
-        //描画機能を有効
-        GetComponent<SpriteRenderer>().enabled = true;
+        //Lifeが0になった場合はisDamageフラグがON
+        bool damage = recoverTime > 0.0f;
+        //isDamageフラグがOFFの場合はボディを確実に表示
+        if (!damage) body.SetActive(true);
+        //Damageフラグをリターン
+        return damage;
     }
+
+    //点滅処理
+    void Blinking()
+    {
+        //その時のゲーム進行時間で正か負かの値を算出
+        float val = Mathf.Sin(Time.time * 50);
+        //正の周期なら表示
+        if (val >= 0) body.SetActive(true);
+        //負の周期なら非表示
+        else body.SetActive(false);
+
+
+    }
+
+
+    //IEnumerator Damaged()
+    //{
+    //    float duration = 1.5f; // 点滅時間
+    //    float blinkInterval = 0.1f; // 点滅の速さ
+    //    float elapsed = 0f;
+
+    //    Renderer r = body.GetComponent<Renderer>();
+
+    //    while (elapsed < duration)
+    //    {
+    //        if (r != null)
+    //            r.enabled = !r.enabled;
+
+    //        yield return new WaitForSeconds(blinkInterval);
+    //        elapsed += blinkInterval;
+    //    }
+
+    //    if (r != null)
+    //        r.enabled = true;
+
+    //    isDamage = false;
+    //}
 
     //ショット可能にする
     void ShootEnabled()
@@ -218,9 +295,10 @@ public class EnemyController : MonoBehaviour
         isAttack = true;
         lockOn = false;
 
-        //エネミーの位置にenemybulletを生成
-        Quaternion rotation = Quaternion.Euler(0, 90, 90);
+        //bulletPrefabのxを90度調整
+        Quaternion rotation = Quaternion.Euler(90, 0, 0);
 
+        //エネミーの子オブジェクトであるgateの位置にenemybulletを生成
         GameObject obj = Instantiate(enemybulletPrefab, gate.transform.position, gate.transform.rotation * rotation);
 
         //生成したenemybulletのRigidbodyを取得
@@ -248,7 +326,7 @@ public class EnemyController : MonoBehaviour
         // GameManagerからenemyListを取得し、最初の要素が自分なら削除
         if (gameMgr == null)
         {
-            gameMgr = GameObject.Find("GameManager"); 
+            gameMgr = GameObject.Find("GameManager");
         }
 
         GameManager gm = gameMgr.GetComponent<GameManager>();
@@ -264,13 +342,14 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        Destroy(gameObject);
+        Destroy(gameObject); //Enemyオブジェクト削除
     }
 
 
     // ギズモで範囲を表示（デバッグ用）
     void OnDrawGizmosSelected()
     {
+        Gizmos.DrawWireSphere(transform.position, stopRange);
         Gizmos.DrawWireSphere(transform.position, attackRange);
         Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
