@@ -44,15 +44,22 @@ public class EnemyController : MonoBehaviour
 
     public float shootInterval = 2f; //シュートの間隔
 
-
-
     bool possibleShoot; //シュートを可能とする
+
+    public GameObject flame; //炎のエフェクト
+
+    //音にまつわるコンポーネントとSE音情報
+    AudioSource audio;
+    public AudioClip se_shot;
+    public AudioClip se_damage;
+    public AudioClip se_explosion;
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
 
-
+        audio = GetComponent<AudioSource>();
         navMeshAgent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player");
 
@@ -145,7 +152,7 @@ public class EnemyController : MonoBehaviour
             navMeshAgent.isStopped = true; //Enemyを止める
         }
 
-        
+
 
     }
 
@@ -157,27 +164,7 @@ public class EnemyController : MonoBehaviour
         //プレイヤーがいない時は何もしない
         if (player == null) return;
 
-        ////playerBullet又はplayerSwordによるダメージ中は点滅処理
-        //if (isDamage && body != null)
-        //{
-
-
-        //    float val = Mathf.Sin(Time.time * 50);
-        //    if (val > 0)
-        //    {
-        //        //描画機能を有効
-        //        body.GetComponent<Renderer>().enabled = true;
-        //    }
-        //    else
-        //    {
-        //        //描画機能を無効
-        //        body.GetComponent<Renderer>().enabled = false;
-        //    }
-
-        //    return;
-        //}
-
-
+       
     }
 
 
@@ -191,12 +178,15 @@ public class EnemyController : MonoBehaviour
         //PlayerBulletに当たったら-1ダメージ
         if (collision.gameObject.CompareTag("PlayerBullet"))
         {
-
+            //体力をマイナス
             enemyHP--;
+
+            SEPlay(SEType.Damage); //ダメージ音を鳴らす
 
             //enemyHPが0より多ければDamageフラグをtrueにしてDamageメソッド発動
             if (enemyHP <= 0)
             {
+                SEPlay(SEType.Explosion); //爆発音を鳴らす
                 Die();
                 return;
             }
@@ -210,10 +200,12 @@ public class EnemyController : MonoBehaviour
         {
             enemyHP -= 3;
 
+            SEPlay(SEType.Damage); //ダメージ音を鳴らす
+
             //enemyHPが0でDieメソッド発動
             if (enemyHP <= 0)
             {
-                //isDamage = true;
+                SEPlay(SEType.Explosion); //爆発音を鳴らす
                 Die();
                 return;
 
@@ -223,15 +215,6 @@ public class EnemyController : MonoBehaviour
             isDamage = true;
         }
     }
-
-    //IEnumerator Damaged()
-    //{
-    //    //3秒待ってisDamageフラグをfalseにする
-    //    yield return new WaitForSeconds(2);
-    //    isDamage = false;
-    //    //描画機能を有効
-    //    body.GetComponent<Renderer>().enabled = true;
-    //}
 
     bool IsDamage()
     {
@@ -256,30 +239,6 @@ public class EnemyController : MonoBehaviour
 
     }
 
-
-    //IEnumerator Damaged()
-    //{
-    //    float duration = 1.5f; // 点滅時間
-    //    float blinkInterval = 0.1f; // 点滅の速さ
-    //    float elapsed = 0f;
-
-    //    Renderer r = body.GetComponent<Renderer>();
-
-    //    while (elapsed < duration)
-    //    {
-    //        if (r != null)
-    //            r.enabled = !r.enabled;
-
-    //        yield return new WaitForSeconds(blinkInterval);
-    //        elapsed += blinkInterval;
-    //    }
-
-    //    if (r != null)
-    //        r.enabled = true;
-
-    //    isDamage = false;
-    //}
-
     //ショット可能にする
     void ShootEnabled()
     {
@@ -291,6 +250,8 @@ public class EnemyController : MonoBehaviour
     {
         //エネミーが消滅していなければ
         if (enemy == null) return;
+
+        SEPlay(SEType.Shot); //ショット音を鳴らす
 
         isAttack = true;
         lockOn = false;
@@ -342,7 +303,12 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        Destroy(gameObject); //Enemyオブジェクト削除
+        Destroy(gameObject, 1); //Enemyオブジェクト削除
+        Instantiate(
+               flame, //生成したいオブジェクト
+               this.transform.position, //Enemyの位置
+               Quaternion.identity
+               );
     }
 
 
@@ -352,5 +318,22 @@ public class EnemyController : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, stopRange);
         Gizmos.DrawWireSphere(transform.position, attackRange);
         Gizmos.DrawWireSphere(transform.position, detectionRange);
+    }
+
+    //SE再生
+    public void SEPlay(SEType type)
+    {
+        switch (type)
+        {
+            case SEType.Shot:
+                audio.PlayOneShot(se_shot);
+                break;
+            case SEType.Damage:
+                audio.PlayOneShot(se_damage);
+                break;
+            case SEType.Explosion:
+                audio.PlayOneShot(se_explosion);
+                break;
+        }
     }
 }
