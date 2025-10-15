@@ -6,11 +6,11 @@ public class BossController : MonoBehaviour
 {
     [Header("基本設定")]
     public int bossHP = 30;                  // 体力
-    public float speed = 3f;                 // 移動速度
+    public float speed = 3f;                 // 歩行速度
     public float shootSpeed = 15f;           // 弾の速度
-    public float moveSpeed = 5f;             // タックルの移動速度
+    public float moveSpeed = 1.5f;             // タックルの移動速度
     public float fireInterval = 2f;          // 連射間隔
-    public float closeRange = 3f;            // 近距離攻撃をする距離
+    public float closeRange = 15f;            // 近距離攻撃をする距離
     public float attackInterval = 5f;        // 攻撃間隔
 
     [Header("参照オブジェクト")]
@@ -24,17 +24,28 @@ public class BossController : MonoBehaviour
     private bool isAttacking;     // 攻撃中かどうか（timer停止用）
     private bool isDamage;     // ダメージ中かどうか
     private bool isInvincible = false; // 無敵時間フラグ
+    private bool isShot; //プレイヤーへ標的を合わせているフラグ
     private float timer = 0f;          // 時間経過
 
-    Rigidbody rbody;
+    Rigidbody rbody; //BossのRigidBody
 
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
 
-        gate = GameObject.Find("Gate");             // 弾の発射位置
-        barrier = GameObject.FindGameObjectWithTag("Barrier");
-        barrier.SetActive(false); //ゲーム開始時はバリアを非表示にしておく
+        gate = GameObject.Find("Gate").gameObject;// Bulletの発射位置
+
+        //barrier = transform.Find("Barrier").gameObject;// Bossの子オブジェクトにあるBarrierを取得
+
+        //barrier.SetActive(false); //ゲーム開始時はバリアを非表示にしておく
+
+        // BossのRigidbodyを初期化し重力や衝突による微妙な動きを止める
+        rbody = GetComponent<Rigidbody>();
+        if (rbody != null)
+        {
+            rbody.isKinematic = true;  // 物理演算を停止
+            rbody.useGravity = false;  // 重力無効
+        }
     }
     void Update()
     {   //ゲームが停止状態なら動かない
@@ -42,20 +53,39 @@ public class BossController : MonoBehaviour
         //プレイヤーがいないなら何もしない
         if (player == null) return;
 
+        timer += Time.deltaTime;//timer
         if (isAttacking) return; // コルーチン中はtimer停止
 
-        timer += Time.deltaTime;
+        // 姿勢補正
+        Vector3 euler = transform.rotation.eulerAngles;
+        transform.rotation = Quaternion.Euler(0, euler.y, 0);
 
-        // プレイヤーの方向を向く
-        Vector3 dir = (player.transform.position - transform.position).normalized;
-        Quaternion targetRot = Quaternion.LookRotation(dir);
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRot, 3f * Time.deltaTime);
+        // プレイヤーとの距離を常に測定
+        float distance = Vector3.Distance(transform.position, player.transform.position);
+
+        // プレイヤーの方向を向く->isShotのフラグが立っていない間はエイムを合わせる
+        if (!isShot == true)
+        {
+            Vector3 dir = (player.transform.position - transform.position).normalized;
+            Quaternion targetRot = Quaternion.LookRotation(dir);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRot, 3f * Time.deltaTime);
+        }
+
+        //攻撃中でない時はプレイヤーの方向に歩く
+        if (!isAttacking)
+        {
+            Vector3 moveDir = (player.transform.position - transform.position).normalized;
+            moveDir.y = 0; // 上下成分を無視
+            if (rbody != null)
+            {
+                rbody.MovePosition(transform.position + moveDir * speed * Time.deltaTime);
+            }
+        }
 
         // 行動タイマーが満了したら行動開始
         if (timer >= attackInterval)
         {
-            float distance = Vector3.Distance(transform.position, player.transform.position);
-
+            Debug.Log("時間が来た");
             if (distance > closeRange)
             {
                 // 遠距離 → タックル or ショットをランダムで選択
@@ -69,6 +99,7 @@ public class BossController : MonoBehaviour
             {
                 // 近距離 → バリア発動
                 StartCoroutine(BarrierCoroutine());
+                Debug.Log("Barrierが呼ばれた！");
             }
 
             timer = 0f;
@@ -78,16 +109,16 @@ public class BossController : MonoBehaviour
     // プレイヤーからの攻撃を受けた時のメソッド
     private void OnTriggerEnter(Collider other)
     {
+        // プレイヤー弾・剣以外は無視
+        if (!other.CompareTag("PlayerBullet") && !other.CompareTag("PlayerSword"))
+            return;
         if (isInvincible || bossHP <= 0) return;
 
         // バリアがONなら弾だけ消してノーダメージ
-        if (barrier != null && barrier.activeSelf)
+        if (activeBarrier != null)
         {
-            if (other.CompareTag("PlayerBullet") || other.CompareTag("PlayerSword"))
-            {
-                Destroy(other.gameObject);
-                return;
-            }
+            if (other.CompareTag("PlayerBullet")) Destroy(other.gameObject);
+            return;
         }
 
         // バリアがOFFならダメージ判定
@@ -96,6 +127,7 @@ public class BossController : MonoBehaviour
         if (other.CompareTag("PlayerBullet"))
         {
             damage = 1;
+            Destroy(other.gameObject); // プレイヤーBulletを削除
         }
         else if (other.CompareTag("PlayerSword"))
         {
@@ -124,18 +156,10 @@ public class BossController : MonoBehaviour
                     StartCoroutine(DamageFlash());
                 }
             }
-
-            // 弾を削除
-            Destroy(other.gameObject);
         }
     }
 
-    // Endingシーンを読み込む
-    void LoadEndingScene()
-    {
-        SceneManager.LoadScene("Ending");
-    }
-
+    //点滅コルーチン
     IEnumerator DamageFlash()
     {
         if (bossHP <= 0)
@@ -150,11 +174,11 @@ public class BossController : MonoBehaviour
         for (int i = 0; i < 4; i++)
         {
             foreach (Renderer r in renderers)
-                r.enabled = false; // ← Rendererの表示をOFF
+                r.enabled = false; // Rendererの表示をOFF
             yield return new WaitForSeconds(0.1f);
 
             foreach (Renderer r in renderers)
-                r.enabled = true;  // ← Rendererの表示をON
+                r.enabled = true;  // Rendererの表示をON
             yield return new WaitForSeconds(0.1f);
         }
 
@@ -166,18 +190,34 @@ public class BossController : MonoBehaviour
     IEnumerator TackleCoroutine()
     {
         isAttacking = true;
-        Vector3 startPos = transform.position;
-        Vector3 targetPos = player.transform.position;
-        float t = 0f;
 
+        //Bossのスタート位置
+        Vector3 startPos = transform.position;
+        //プレイヤーの方向を取得
+        Vector3 dirToPlayer = (player.transform.position - transform.position).normalized;
+        //プレイヤーの少し手前で止まる(逃げる猶予)
+        Vector3 targetPos = player.transform.position - dirToPlayer * 1.5f;
+
+        //タックル攻撃
+        float t = 0f;
         while (t < 1f)
         {
             transform.position = Vector3.Lerp(startPos, targetPos, t);
-            t += Time.deltaTime * speed;
+            t += Time.deltaTime * moveSpeed;
             yield return null;
         }
 
-        yield return new WaitForSeconds(1f); // 余韻
+        yield return new WaitForSeconds(1f); // 攻撃の後の余韻
+
+        // タックル終了時に少し後退させる（Barrierが発動しタックルと干渉しないように）
+        Vector3 backPos = transform.position - dirToPlayer * 1.0f;
+        float backSpeed = 1.5f; // 後退のスピード
+        while (Vector3.Distance(transform.position, backPos) > 0.05f)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, backPos, backSpeed * Time.deltaTime);
+            yield return null;
+        }
+
         isAttacking = false;
     }
 
@@ -185,8 +225,9 @@ public class BossController : MonoBehaviour
     IEnumerator ShotCoroutine()
     {
         isAttacking = true;
+        isShot = true;
 
-        // 撃つ前に一瞬狙いを定める（演出用）
+        // 撃つ前に一瞬狙いを定める
         transform.LookAt(player.transform);
         yield return new WaitForSeconds(1f); // 1秒間静止（プレイヤーが避ける余裕）
 
@@ -194,46 +235,96 @@ public class BossController : MonoBehaviour
 
         for (int i = 0; i < shotCount; i++)
         {
-            // ===== 弾を生成・発射 =====
+            //  弾を生成・発射 
             if (bulletPrefab != null && gate != null)
             {
-                GameObject bullet = Instantiate(bulletPrefab, gate.transform.position, gate.transform.rotation);
+                // Gateの回転にX軸90度だけ回転
+                Quaternion bulletRotation = gate.transform.rotation * Quaternion.Euler(90, 0, 0);
+                //Bulletの生成
+                GameObject bullet = Instantiate(bulletPrefab, gate.transform.position, bulletRotation);
 
-                rbody = bullet.GetComponent<Rigidbody>();
-                if (rbody != null)
+                // 弾専用のRigidbody
+                Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
+                if (bulletRb != null)
                 {
+                    bulletRb.useGravity = false; // 重力オフ
+                    bulletRb.linearDamping = 0f;  // 空気抵抗なし
+                    bulletRb.angularDamping = 0f; // 回転して減速しないÏ
+
                     // 発射方向を再取得（プレイヤーが動いた場合に対応）
                     Vector3 dir = (player.transform.position - gate.transform.position).normalized;
-                    rbody.AddForce(dir * shootSpeed, ForceMode.Impulse);
+                    //Playerの方角へAddForce
+                    bulletRb.AddForce(dir * shootSpeed * 10f, ForceMode.Impulse);
                 }
             }
 
-            // ===== 次の弾までの間隔 =====
+            // 次の弾までの間隔
             yield return new WaitForSeconds(fireInterval);
         }
 
         yield return new WaitForSeconds(1f); // 最後の発射後の余韻
         isAttacking = false;
+        isShot = false;
     }
+
+    private GameObject activeBarrier; // 現在展開中のBarrierインスタンスを保持
 
     //バリアコルーチン、一定時間展開し外部からの攻撃を弾く
     IEnumerator BarrierCoroutine()
     {
         isAttacking = true;
+        Debug.Log("BarrierCoroutine呼ばれた！");
 
-        // シーンに配置済みのbarrierをONに
+        // Barrierを生成
         if (barrier != null)
-            barrier.SetActive(true);
+        {
+            // ボスの中心に生成（少し拡大して周囲を覆うようにする）
+            Vector3 pos = transform.position + Vector3.up * 1.5f;
+            activeBarrier = Instantiate(barrier, pos, Quaternion.identity, transform);
+            Debug.Log("Barrier生成成功！");
 
-        float duration = 3f; // バリアの持続時間
-        yield return new WaitForSeconds(duration);
+            // バリアがDestroyされる時間分待つ
+            yield return new WaitForSeconds(3.0f);
 
-        // 時間が経ったらOFFに戻す
-        if (barrier != null)
-            barrier.SetActive(false);
-
-        yield return new WaitForSeconds(1f);
-        isAttacking = false;
+            // 攻撃フラグ解除 
+            isAttacking = false;
+        }
+        else
+        {
+            Debug.LogWarning("Barrier prefab not assigned!");
+            yield return null;
+            isAttacking = false;
+        }
     }
+
+    //バリアを子オブジェクトにしてSetActiveで表示・非表示する場合のコルーチン
+    // IEnumerator BarrierCoroutine()
+    // {
+    //     isAttacking = true;
+
+    //     // 子オブジェクトのBarrierをONに
+    //     if (barrier != null)
+    //     {
+    //         Debug.Log("Barrier: ON");
+    //         barrier.SetActive(true);
+    //     }
+
+    //     float duration = 3f; // バリアの持続時間
+    //     yield return new WaitForSeconds(duration);
+
+    //     // 時間が経ったらOFFに戻す
+    //     if (barrier != null)
+    //         barrier.SetActive(false);
+
+    //     yield return new WaitForSeconds(1f);
+    //     isAttacking = false;
+    // }
+
+    // Endingシーンを読み込む
+    void LoadEndingScene()
+    {
+        SceneManager.LoadScene("Ending");
+    }
+
 }
 
