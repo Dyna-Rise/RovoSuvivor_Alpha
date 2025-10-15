@@ -31,12 +31,9 @@ public class BossController : MonoBehaviour
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
-        rbody = GetComponent<Rigidbody>();
 
         gate = GameObject.Find("Gate");             // 弾の発射位置
         barrier = GameObject.FindGameObjectWithTag("Barrier");
-        body = GetComponentInChildren<Renderer>(); // bossの子オブジェクトの持つ見た目部分
-
         barrier.SetActive(false); //ゲーム開始時はバリアを非表示にしておく
     }
     void Update()
@@ -149,11 +146,15 @@ public class BossController : MonoBehaviour
 
         // 無敵演出と点滅演出（RendererのON・OFFの切り替え）
         isInvincible = true;
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();//複数Rendererを点滅対象にさせる
         for (int i = 0; i < 4; i++)
         {
-            body.enabled = false; // ← Rendererの表示をOFF
+            foreach (Renderer r in renderers)
+                r.enabled = false; // ← Rendererの表示をOFF
             yield return new WaitForSeconds(0.1f);
-            body.enabled = true;  // ← Rendererの表示をON
+
+            foreach (Renderer r in renderers)
+                r.enabled = true;  // ← Rendererの表示をON
             yield return new WaitForSeconds(0.1f);
         }
 
@@ -198,12 +199,12 @@ public class BossController : MonoBehaviour
             {
                 GameObject bullet = Instantiate(bulletPrefab, gate.transform.position, gate.transform.rotation);
 
-                Rigidbody rb = bullet.GetComponent<Rigidbody>();
-                if (rb != null)
+                rbody = bullet.GetComponent<Rigidbody>();
+                if (rbody != null)
                 {
                     // 発射方向を再取得（プレイヤーが動いた場合に対応）
                     Vector3 dir = (player.transform.position - gate.transform.position).normalized;
-                    rb.AddForce(dir * shootSpeed, ForceMode.Impulse);
+                    rbody.AddForce(dir * shootSpeed, ForceMode.Impulse);
                 }
             }
 
