@@ -8,10 +8,12 @@ public class BossController : MonoBehaviour
     public int bossHP = 30;                  // 体力
     public float speed = 3f;                 // 歩行速度
     public float shootSpeed = 15f;           // 弾の速度
-    public float moveSpeed = 1.5f;             // タックルの移動速度
+    public float moveSpeed = 1.5f;           // タックルの移動速度
     public float fireInterval = 2f;          // 連射間隔
-    public float closeRange = 15f;            // 近距離攻撃をする距離
+    public float closeRange = 20f;           // 近距離攻撃をする距離
     public float attackInterval = 5f;        // 攻撃間隔
+    public GameObject explosionPrefab;  //爆発エフェクト
+    private GameObject activeBarrier;   // 展開中のBarrierインスタンス
 
     [Header("参照オブジェクト")]
     public GameObject bulletPrefab;          // 弾プレハブ
@@ -21,11 +23,19 @@ public class BossController : MonoBehaviour
     GameObject player;
 
     [Header("内部制御")]
-    private bool isAttacking;     // 攻撃中かどうか（timer停止用）
-    private bool isDamage;     // ダメージ中かどうか
+    private bool isAttacking;          // 攻撃中かどうか（timer停止用）
+    private bool isDamage;             // ダメージ中かどうか
     private bool isInvincible = false; // 無敵時間フラグ
-    private bool isShot; //プレイヤーへ標的を合わせているフラグ
+    private bool isShot;               // プレイヤーへ標的を合わせているフラグ
     private float timer = 0f;          // 時間経過
+
+    [Header("SE")]
+    AudioSource audioSource;
+    public AudioClip SE_Tackle;
+    public AudioClip SE_Shot;
+    public AudioClip SE_Barrier;
+    public AudioClip SE_damage;
+    public AudioClip SE_Explosion;
 
     Rigidbody rbody; //BossのRigidBody
 
@@ -35,9 +45,7 @@ public class BossController : MonoBehaviour
 
         gate = GameObject.Find("Gate").gameObject;// Bulletの発射位置
 
-        //barrier = transform.Find("Barrier").gameObject;// Bossの子オブジェクトにあるBarrierを取得
-
-        //barrier.SetActive(false); //ゲーム開始時はバリアを非表示にしておく
+        audioSource = GetComponent<AudioSource>();
 
         // BossのRigidbodyを初期化し重力や衝突による微妙な動きを止める
         rbody = GetComponent<Rigidbody>();
@@ -50,11 +58,11 @@ public class BossController : MonoBehaviour
     void Update()
     {   //ゲームが停止状態なら動かない
         if (GameManager.gameState != GameState.playing) return;
-        //プレイヤーがいないなら何もしない
+        if (bossHP <= 0) return;
         if (player == null) return;
 
-        timer += Time.deltaTime;//timer
-        if (isAttacking) return; // コルーチン中はtimer停止
+        timer += Time.deltaTime;//ゲームの経過時間
+        if (isAttacking) return; // 攻撃中は処理をしない
 
         // 姿勢補正
         Vector3 euler = transform.rotation.eulerAngles;
@@ -75,7 +83,8 @@ public class BossController : MonoBehaviour
         if (!isAttacking)
         {
             Vector3 moveDir = (player.transform.position - transform.position).normalized;
-            moveDir.y = 0; // 上下成分を無視
+            moveDir.y = 0; // 上下の動きをさせない
+            moveDir += Random.insideUnitSphere * 0.1f;//ランダムにふらつかせる
             if (rbody != null)
             {
                 rbody.MovePosition(transform.position + moveDir * speed * Time.deltaTime);
@@ -88,7 +97,7 @@ public class BossController : MonoBehaviour
             Debug.Log("時間が来た");
             if (distance > closeRange)
             {
-                // 遠距離 → タックル or ショットをランダムで選択
+                // 遠距離 → タックル(0) or ショット(1)をランダムで選択
                 int rand = Random.Range(0, 2);
                 if (rand == 0)
                     StartCoroutine(TackleCoroutine());
@@ -139,13 +148,21 @@ public class BossController : MonoBehaviour
             // ダメージを受ける
             if (!isInvincible)
             {
+                audioSource.PlayOneShot(SE_damage);
                 bossHP -= damage;
 
                 // HPが0以下になったら死亡処理
                 if (bossHP <= 0)
                 {
                     bossHP = 0;
+                    audioSource.PlayOneShot(SE_Explosion);
+
+                    //爆発エフェクト生成
+                    if (explosionPrefab != null) Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+                    Destroy(body);
+
                     GameManager.gameState = GameState.gameclear;
+
                     // 1.5秒後にEndingシーンを読み込み
                     Invoke(nameof(LoadEndingScene), 1.5f);
                     return;
@@ -159,7 +176,7 @@ public class BossController : MonoBehaviour
         }
     }
 
-    //点滅コルーチン
+    //点滅コルーチン：点滅＋点滅中ダメージを受けない無敵処理
     IEnumerator DamageFlash()
     {
         if (bossHP <= 0)
@@ -183,7 +200,6 @@ public class BossController : MonoBehaviour
         }
 
         isInvincible = false;
-
     }
 
     // タックルコルーチン：一定時間プレイヤーの方向にLerpで突進
@@ -199,6 +215,7 @@ public class BossController : MonoBehaviour
         Vector3 targetPos = player.transform.position - dirToPlayer * 1.5f;
 
         //タックル攻撃
+        audioSource.PlayOneShot(SE_Tackle);
         float t = 0f;
         while (t < 1f)
         {
@@ -219,6 +236,7 @@ public class BossController : MonoBehaviour
         }
 
         isAttacking = false;
+        StartCoroutine(BarrierCoroutine());//バリアコルーチンを呼ぶ
     }
 
     //ショットコルーチン：一定間隔で球を発射
@@ -242,6 +260,8 @@ public class BossController : MonoBehaviour
                 Quaternion bulletRotation = gate.transform.rotation * Quaternion.Euler(90, 0, 0);
                 //Bulletの生成
                 GameObject bullet = Instantiate(bulletPrefab, gate.transform.position, bulletRotation);
+
+                audioSource.PlayOneShot(SE_Shot);
 
                 // 弾専用のRigidbody
                 Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
@@ -267,21 +287,22 @@ public class BossController : MonoBehaviour
         isShot = false;
     }
 
-    private GameObject activeBarrier; // 現在展開中のBarrierインスタンスを保持
-
-    //バリアコルーチン、一定時間展開し外部からの攻撃を弾く
+    //バリアコルーチン: 一定時間展開し外部からの攻撃を弾く
     IEnumerator BarrierCoroutine()
     {
+
         isAttacking = true;
         Debug.Log("BarrierCoroutine呼ばれた！");
+
 
         // Barrierを生成
         if (barrier != null)
         {
-            // ボスの中心に生成（少し拡大して周囲を覆うようにする）
-            Vector3 pos = transform.position + Vector3.up * 1.5f;
-            activeBarrier = Instantiate(barrier, pos, Quaternion.identity, transform);
+            // ボスを覆うようにバリア生成
+            activeBarrier = Instantiate(barrier, transform.position + new Vector3(0, 5.0f, 0), Quaternion.identity);
             Debug.Log("Barrier生成成功！");
+
+            audioSource.PlayOneShot(SE_Barrier);
 
             // バリアがDestroyされる時間分待つ
             yield return new WaitForSeconds(3.0f);
@@ -289,42 +310,11 @@ public class BossController : MonoBehaviour
             // 攻撃フラグ解除 
             isAttacking = false;
         }
-        else
-        {
-            Debug.LogWarning("Barrier prefab not assigned!");
-            yield return null;
-            isAttacking = false;
-        }
     }
-
-    //バリアを子オブジェクトにしてSetActiveで表示・非表示する場合のコルーチン
-    // IEnumerator BarrierCoroutine()
-    // {
-    //     isAttacking = true;
-
-    //     // 子オブジェクトのBarrierをONに
-    //     if (barrier != null)
-    //     {
-    //         Debug.Log("Barrier: ON");
-    //         barrier.SetActive(true);
-    //     }
-
-    //     float duration = 3f; // バリアの持続時間
-    //     yield return new WaitForSeconds(duration);
-
-    //     // 時間が経ったらOFFに戻す
-    //     if (barrier != null)
-    //         barrier.SetActive(false);
-
-    //     yield return new WaitForSeconds(1f);
-    //     isAttacking = false;
-    // }
 
     // Endingシーンを読み込む
     void LoadEndingScene()
     {
         SceneManager.LoadScene("Ending");
     }
-
 }
-
