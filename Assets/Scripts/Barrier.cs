@@ -19,14 +19,13 @@ public class Barrier : MonoBehaviour
 
             Vector3 pushDirection = (other.transform.position - transform.position).normalized;
 
-            // Y²•ûŒü‚Ì—Í‚Í’Êí‚Í‰Á‚¦‚È‚¢i’n–Ê‚É‚ß‚è‚ñ‚¾‚èA•‚‚«ã‚ª‚Á‚½‚è‚µ‚È‚¢‚æ‚¤‚Éj
-            // •K—v‚Å‚ ‚ê‚Î’²®‚µ‚Ä‚­‚¾‚³‚¢
+            
             pushDirection.y = 0;
 
-            // ‰Ÿ‚µo‚·ƒxƒNƒgƒ‹‚ğŒvZ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½oï¿½ï¿½ï¿½xï¿½Nï¿½gï¿½ï¿½ï¿½ï¿½ï¿½vï¿½Z
             Vector3 moveVector = pushDirection * pushForce * Time.deltaTime;
 
-            // ‘Šè‚ÌCharacterController‚ğˆÚ“®‚³‚¹‚é
+            // ï¿½ï¿½ï¿½ï¿½ï¿½CharacterControllerï¿½ï¿½ï¿½Ú“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             characterCnt.Move(moveVector);
         }
     }
