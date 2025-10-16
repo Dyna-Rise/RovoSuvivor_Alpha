@@ -163,7 +163,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000061035156, y: 306.1188}
+  m_AnchoredPosition: {x: 0.00012207031, y: 306.1188}
   m_SizeDelta: {x: 0, y: -612.2376}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1606886885146196496
@@ -291,6 +291,7 @@ GameObject:
   - component: {fileID: 7038816695655340987}
   - component: {fileID: 6050740850579248694}
   - component: {fileID: 4914305780754266604}
+  - component: {fileID: 3917551630118063863}
   m_Layer: 5
   m_Name: BossCanvas
   m_TagString: Untagged
@@ -381,6 +382,20 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &3917551630118063863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4005422371097624994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0fa8fed994506b45af6a3eb4f2c87c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bossCnt: {fileID: 0}
+  bossSlider: {fileID: 8523774437266646847}
 --- !u!1 &6378372997351278410
 GameObject:
   m_ObjectHideFlags: 0

@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 6683042985204019288}
   - component: {fileID: 2861548984633659903}
   - component: {fileID: 6787525714402729169}
+  - component: {fileID: 691957157580639716}
   m_Layer: 9
   m_Name: Enemy
   m_TagString: Enemy
@@ -297,6 +298,36 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &691957157580639716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7574530475446584854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e3ef361ec51b59458e23108384b544e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyHP: 5
+  enemySpeed: 5
+  enemySlowSpeed: 1
+  body: {fileID: 6587843039138566610}
+  detectionRange: 80
+  attackRange: 30
+  stopRange: 5
+  bulletPrefab: {fileID: 6661650154168110023, guid: 474f41b5d7352454da578f36c4c2835a, type: 3}
+  gate: {fileID: 708062315536498857, guid: e175cb3f9775ccf4babf0e89792bdab2, type: 3}
+  bulletSpeed: 100
+  fireInterval: 2
+  enemybulletPrefab: {fileID: 6661650154168110023, guid: d6af67595b24ddb4dbea8a0f393d64c8, type: 3}
+  shootSpeed: 100
+  shootInterval: 2
+  flame: {fileID: 11221310824418764, guid: aa39998c8818a584ba24965d950e51b1, type: 3}
+  se_shot: {fileID: 8300000, guid: e9d67448e6d9ef749a7b4bdf5711c64b, type: 3}
+  se_damage: {fileID: 8300000, guid: 0d30ac30267e842419537598daf5f23d, type: 3}
+  se_explosion: {fileID: 8300000, guid: 0bdbb689c62e18943b959eb8102051b0, type: 3}
 --- !u!1 &7844889968726266431
 GameObject:
   m_ObjectHideFlags: 0

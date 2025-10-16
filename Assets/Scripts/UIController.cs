@@ -11,7 +11,7 @@ public class UIController : MonoBehaviour
     public TextMeshProUGUI rifleValue;
     public Slider rifleSlider;
 
-    //DashController dash;
+    DashController dash;
     public Slider dashSlider;
 
     public TalkData missions;
@@ -36,7 +36,7 @@ public class UIController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        //dash = GameObject.FindGameObjectWithTag("Player").GetComponent<DashController>();
+        dash = GameObject.FindGameObjectWithTag("Player").GetComponent<DashController>();
 
         currentPlayerHP = GameManager.playerHP;
         currentShotRemainingNum = GameManager.shotRemainingNum;
@@ -95,14 +95,14 @@ public class UIController : MonoBehaviour
         }
 
         //ダッシュを実装できた後に機能
-        //if (dash != null)
-        //{
-        //    if (currentDashStamina != dash.currentDashStamina)
-        //    {
-        //        currentDashStamina = dash.currentDashStamina;
-        //        dashSlider.value = currentDashStamina;
-        //    }
-        //}
+        if (dash != null)
+        {
+            if (currentDashStamina != dash.currentDashStamina)
+            {
+                currentDashStamina = dash.currentDashStamina;
+                dashSlider.value = currentDashStamina;
+            }
+        }
 
     }
 }
