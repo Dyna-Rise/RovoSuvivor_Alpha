@@ -5,7 +5,7 @@ using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour
 {
-    //Animator animator; //Animatorコンポーネントを扱うための変数
+    public Animator animator; //Animatorコンポーネントを扱うための変数
 
     public int enemyHP = 5; //敵のHP
     public float enemySpeed = 5.0f; //敵のスピード
@@ -287,7 +287,7 @@ public class EnemyController : MonoBehaviour
     void Die()
     {
         //animator.SetBool("Dead", true); //デッドアニメに切り替え
-
+        animator.SetTrigger("die");
         // GameManagerからenemyListを取得し、先頭の要素を削除
         if (gameMgr == null)
         {
@@ -302,13 +302,11 @@ public class EnemyController : MonoBehaviour
         }
 
 
-
-
         Destroy(gameObject, 1); //Enemyオブジェクト削除
         Instantiate(
                flame, //生成したいオブジェクト
                this.transform.position, //Enemyの位置
-               Quaternion.identity
+               flame.transform.rotation
                );
     }
 

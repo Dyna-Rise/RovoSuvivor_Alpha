@@ -39,7 +39,13 @@ public class UIController : MonoBehaviour
         dash = GameObject.FindGameObjectWithTag("Player").GetComponent<DashController>();
 
         currentPlayerHP = GameManager.playerHP;
+        int val = currentPlayerHP * 100;
+        lifeValue.text = val.ToString();
+        lifeSlider.value = currentPlayerHP;
+
         currentShotRemainingNum = GameManager.shotRemainingNum;
+        rifleValue.text = currentShotRemainingNum.ToString();
+        rifleSlider.value = currentShotRemainingNum;
     }
 
     // Update is called once per frame
