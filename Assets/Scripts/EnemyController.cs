@@ -5,6 +5,8 @@ using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour
 {
+    //Animator animator; //Animatorコンポーネントを扱うための変数
+
     public int enemyHP = 5; //敵のHP
     public float enemySpeed = 5.0f; //敵のスピード
     public float enemySlowSpeed = 2.5f; //敵のスピードを緩める
@@ -58,7 +60,7 @@ public class EnemyController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-
+        //animator = GetComponent<Animator>();//Animatorコンポーネントの情報を代入
         audio = GetComponent<AudioSource>();
         navMeshAgent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player");
@@ -164,7 +166,7 @@ public class EnemyController : MonoBehaviour
         //プレイヤーがいない時は何もしない
         if (player == null) return;
 
-       
+
     }
 
 
@@ -284,7 +286,9 @@ public class EnemyController : MonoBehaviour
 
     void Die()
     {
-        // GameManagerからenemyListを取得し、最初の要素が自分なら削除
+        //animator.SetBool("Dead", true); //デッドアニメに切り替え
+
+        // GameManagerからenemyListを取得し、先頭の要素を削除
         if (gameMgr == null)
         {
             gameMgr = GameObject.Find("GameManager");
@@ -293,15 +297,12 @@ public class EnemyController : MonoBehaviour
         GameManager gm = gameMgr.GetComponent<GameManager>();
         if (gm != null && gm.enemyList != null && gm.enemyList.Count > 0)
         {
-            if (gm.enemyList[0] == this.gameObject)
-            {
-                gm.enemyList.RemoveAt(0);
-            }
-            else
-            {
-                gm.enemyList.Remove(this.gameObject); // 念のため自身を削除
-            }
+
+            gm.enemyList.RemoveAt(0); //先頭を削除
         }
+
+
+
 
         Destroy(gameObject, 1); //Enemyオブジェクト削除
         Instantiate(
