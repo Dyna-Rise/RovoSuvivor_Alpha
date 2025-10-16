@@ -4,6 +4,13 @@ public class PlayerAnimation : MonoBehaviour
 {
     public Animator animator;
     bool isDeadAnime;
+    CharacterController controller;
+
+    void Start()
+    {
+        controller = GetComponentInParent<CharacterController>();
+        if (controller == null) Debug.LogWarning("CharacterController Ç™êeäKëwÇ…å©Ç¬Ç©ÇËÇ‹ÇπÇÒ");
+    }
 
 
     void Update()
@@ -62,10 +69,11 @@ public class PlayerAnimation : MonoBehaviour
         }
     }
 
-  
+
     void JumpAnimation()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+       
+        if (controller != null && controller.isGrounded && Input.GetKeyDown(KeyCode.Space))
         {
             animator.SetTrigger("jump");
         }

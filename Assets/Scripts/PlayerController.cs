@@ -20,6 +20,9 @@ public class PlayerController : MonoBehaviour
     public AudioClip se_Walk;
     public AudioClip se_Damage;
 
+    float walkInterval = 0.6f;
+    float walkTimer;
+
 
     void Start()
     {
@@ -79,6 +82,8 @@ public class PlayerController : MonoBehaviour
 
         if (controller.isGrounded) moveDirection.y = 0;
 
+        walkSe();
+
 
     }
 
@@ -124,5 +129,23 @@ public class PlayerController : MonoBehaviour
         float val = Mathf.Sin(Time.time * 50);
         if (val > 0) body.SetActive(true);
         else body.SetActive(false);
+    }
+
+    void walkSe()
+    {
+        if (moveDirection.x != 0 || moveDirection.z != 0)
+        {
+            walkTimer += Time.deltaTime; 
+
+            if (walkTimer >= walkInterval) 
+            {
+                audioSource.PlayOneShot(se_Walk);
+                walkTimer = 0;
+            }
+        }
+        else 
+        {
+            walkTimer = 0f;
+        }
     }
 }
