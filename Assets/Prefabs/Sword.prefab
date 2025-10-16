@@ -9912,4 +9912,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f643a851ae4696245ada766e6d5cf2fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  swordCollider: {fileID: 0}
+  swordPrefab: {fileID: 0}
   deleteTime: 0.5
