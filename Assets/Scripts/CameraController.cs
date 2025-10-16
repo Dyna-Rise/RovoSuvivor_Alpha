@@ -9,7 +9,7 @@ public class CameraController : MonoBehaviour
 
     //カメラの初期位置（プレイヤー位置のY + 2.5, Z -2.0当たりにするとおおむねUI照準通りに弾が飛ぶ）
     [SerializeField] Vector3 defaultPos = new Vector3(0, 3.5f, -2);
-    [SerializeField] Vector3 defaultRotate = new Vector3(20, 0, 0);
+    [SerializeField] Vector3 defaultRotate = new Vector3(15, 0, 0);
 
     [SerializeField] float mouseSensitivity = 3.0f; //マウス感度
 
@@ -37,9 +37,7 @@ public class CameraController : MonoBehaviour
 
     private void LateUpdate()
     {
-        //playing出なければリターン
         if (GameManager.gameState != GameState.playing) return;
-        //プレイヤーがいなければリターン
         if (player == null) return;
 
         //マウスの動きを取得

@@ -28,6 +28,11 @@ public class SwordAttack : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.gameState != GameState.playing)
+        {
+            return;
+        }
+
         if (Input.GetMouseButtonDown(1) && !isAttack)
         {
             Attack();
@@ -37,7 +42,7 @@ public class SwordAttack : MonoBehaviour
     //攻撃メソッド
     void Attack()
     {
-        //攻撃フラグを立てて回復時間の計測を開始
+        //攻撃フラグを立てて硬直時間の計測を開始
         isAttack = true;
         StartCoroutine(SwordAttackCoroutine());
 
@@ -54,16 +59,14 @@ public class SwordAttack : MonoBehaviour
             );
         //エフェクトをソードの子オブジェクトにして位置を同期させる
         obj.transform.SetParent(swordCollider.transform);
-
-        //ダメージ処理はエネミー側で実行
     }
 
-    //回復時間
+    //硬直時間
     IEnumerator SwordAttackCoroutine()
     {
         //deleteTime後に再度打てるようになる
         yield return new WaitForSeconds(deleteTime);
-        //ソードを非表示にしてフラグをfalseにする
+
         swordCollider.SetActive(false);
         isAttack = false;
     }
