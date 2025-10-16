@@ -51,7 +51,7 @@ public class BossController : MonoBehaviour
         rbody = GetComponent<Rigidbody>();
         if (rbody != null)
         {
-            rbody.isKinematic = true;  // 物理演算を停止
+            //rbody.isKinematic = true;  // 物理演算を停止
             rbody.useGravity = false;  // 重力無効
         }
     }
@@ -62,7 +62,7 @@ public class BossController : MonoBehaviour
         if (player == null) return;
 
         timer += Time.deltaTime;//ゲームの経過時間
-        if (isAttacking) return; // 攻撃中は処理をしない
+        //if (isAttacking) return; // 攻撃中は処理をしない
 
         // 姿勢補正
         Vector3 euler = transform.rotation.eulerAngles;
@@ -84,7 +84,10 @@ public class BossController : MonoBehaviour
         {
             Vector3 moveDir = (player.transform.position - transform.position).normalized;
             moveDir.y = 0; // 上下の動きをさせない
-            moveDir += Random.insideUnitSphere * 0.1f;//ランダムにふらつかせる
+            Vector3 randMoveDir = Random.insideUnitSphere;//ランダムにふらつかせる
+            moveDir.x += randMoveDir.x;
+            moveDir.z += randMoveDir.z;
+
             if (rbody != null)
             {
                 rbody.MovePosition(transform.position + moveDir * speed * Time.deltaTime);
@@ -275,6 +278,11 @@ public class BossController : MonoBehaviour
                     Vector3 dir = (player.transform.position - gate.transform.position).normalized;
                     //Playerの方角へAddForce
                     bulletRb.AddForce(dir * shootSpeed * 10f, ForceMode.Impulse);
+                }
+
+                if(bossHP <= 0)
+                {
+                    Destroy(bulletRb.gameObject);
                 }
             }
 
