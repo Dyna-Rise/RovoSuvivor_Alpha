@@ -379,7 +379,7 @@ MonoBehaviour:
   gate: {fileID: 4626165753680611159}
   bulletPrefab: {fileID: 6661650154168110023, guid: 474f41b5d7352454da578f36c4c2835a, type: 3}
   shootPower: 100
-  shotRecoverTime: 7
+  shotRecoverTime: 10
   se_shot: {fileID: 8300000, guid: e9d67448e6d9ef749a7b4bdf5711c64b, type: 3}
 --- !u!114 &3613823445869560492
 MonoBehaviour:
