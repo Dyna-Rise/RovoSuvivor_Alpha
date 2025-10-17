@@ -19,6 +19,9 @@ public class Gate : MonoBehaviour
 
     GameObject gameMgr;
 
+    //Enemyのランダム生成位置
+    public Transform[] spawnPoints;
+
     AudioSource audioSource;
 
     public AudioClip se_Create;
@@ -51,7 +54,7 @@ public class Gate : MonoBehaviour
 
         // プレイヤーが検知範囲内にいるか
         if (distanceToPlayer <= detectionRange)
-        { 
+        {
             timer += Time.deltaTime; //時間経過
         }
 
@@ -59,17 +62,46 @@ public class Gate : MonoBehaviour
         if (timer >= generateInterval)
         {
             audioSource.PlayOneShot(se_Create);
+            SpawnEnemyAtRandomPoint(); //ダンダム生成を呼び出す
 
-            GameObject obj = Instantiate(
-                enemyPrefab,
-                transform.position,
-                Quaternion.identity
-                );
+            // GameObject obj = Instantiate(
+            //     enemyPrefab,
+            //     transform.position,
+            //     Quaternion.identity
+            //     );
 
             //リストにEnemy情報を追加
-            gameMgr.GetComponent<GameManager>().enemyList.Add(obj);
+            //gameMgr.GetComponent<GameManager>().enemyList.Add(obj);
 
             timer = 0;
+        }
+    }
+
+    //spawnPointsのリストからランダムに一つ選び敵を生成
+    void SpawnEnemyAtRandomPoint()
+    {
+        if (enemyPrefab == null) return;
+
+        // Gate自身の位置に初期値を置く
+        Vector3 pos = transform.position;
+        Quaternion rot = Quaternion.identity;
+
+        //リストがあればランダム選択
+        if (spawnPoints != null && spawnPoints.Length > 0)
+        {
+            var sp = spawnPoints[Random.Range(0, spawnPoints.Length)];
+            if (sp != null)
+            {
+                pos = sp.position;
+                rot = sp.rotation;
+            }
+
+            audioSource.PlayOneShot(se_Create);
+
+            //敵を生成
+            GameObject obj = Instantiate(enemyPrefab, pos, rot);
+            //リストにEnemy情報を追加
+            gameMgr.GetComponent<GameManager>().enemyList.Add(obj);
         }
     }
 
@@ -93,7 +125,7 @@ public class Gate : MonoBehaviour
 
             isDamage = true; //ダメージフラグON
 
-            if(gateHP <= 0)
+            if (gateHP <= 0)
             {
                 GameManager.numOfGate--; //ゲートの数を減らす
 
