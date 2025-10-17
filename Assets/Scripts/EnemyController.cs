@@ -251,7 +251,7 @@ public class EnemyController : MonoBehaviour
     void Shot()
     {
         //エネミーが消滅していなければ
-        if (enemy == null) return;
+        if (enemy == null || enemyHP <= 0) return;
 
         SEPlay(SEType.Shot); //ショット音を鳴らす
 
