@@ -42,28 +42,17 @@ public class Shooter : MonoBehaviour
         //ショット音を鳴らす
         audioSource.PlayOneShot(se_shot);
 
-        //発射される角度を設定
-        Quaternion shotRotate = Camera.main.transform.rotation;
-        if (shotRotate.x > 0)
-        {
-            shotRotate = gate.transform.rotation;
-        }
-
         //弾を生成
         GameObject obj = Instantiate(
             bulletPrefab,
             gate.transform.position,
-            shotRotate * Quaternion.Euler(90, 0, 0)
+            gate.transform.rotation * Quaternion.Euler(90, 0, 0)
             );
 
         //カメラの方向に弾を飛ばす
         Vector3 v = Camera.main.transform.forward;
         //照準どおりに飛ぶように調整
         v.y += 0.2f;
-        if (shotRotate.x < 0)
-        {
-            v.y += -shotRotate.x * 0.3f;
-        }
 
         obj.GetComponent<Rigidbody>().AddForce(v * shootPower, ForceMode.Impulse);
         //リロードを開始

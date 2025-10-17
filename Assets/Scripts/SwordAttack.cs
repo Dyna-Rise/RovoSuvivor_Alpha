@@ -17,15 +17,6 @@ public class SwordAttack : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.CompareTag("Enemy"))
-        {
-            Destroy(other.gameObject);
-
-        }
-    }
-
     private void Update()
     {
         if (GameManager.gameState != GameState.playing)
