@@ -12,6 +12,7 @@ TagManager:
   - PlayerSword
   - Point
   - GM
+  - GateSpot
   layers:
   - Default
   - TransparentFX
