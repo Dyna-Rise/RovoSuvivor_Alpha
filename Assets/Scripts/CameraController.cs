@@ -1,5 +1,6 @@
 using UnityEngine;
 
+//レビュー　CameraController
 public class CameraController : MonoBehaviour
 {
     GameObject player; //プレイヤー
