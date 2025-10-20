@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
+//コードレビュー　EnemyController
 public class EnemyController : MonoBehaviour
 {
     public Animator animator; //Animatorコンポーネントを扱うための変数
