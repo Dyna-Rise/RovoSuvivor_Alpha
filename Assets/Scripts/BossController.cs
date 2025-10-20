@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.SceneManagement;
 
+//コードレビュー BossController
 public class BossController : MonoBehaviour
 {
     [Header("基本設定")]
