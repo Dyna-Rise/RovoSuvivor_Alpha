@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+//レビュー Shooter
 public class Shooter : MonoBehaviour
 {
     public GameObject gate; //Gateオブジェクト

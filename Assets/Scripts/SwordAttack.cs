@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+//レビュー SwordAttack
 public class SwordAttack : MonoBehaviour
 {
     public GameObject swordCollider;
