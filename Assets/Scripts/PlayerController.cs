@@ -1,19 +1,20 @@
 using UnityEngine;
 using System.Collections;
 
+//ãƒ¬ãƒ“ãƒ¥ãƒ¼ç”¨PlayerController
 public class PlayerController : MonoBehaviour
 {
    
     CharacterController controller;
 
-    public float moveSpeed = 5.0f; //ˆÚ“®ƒXƒs[ƒh
-    public float jumpForce = 8.0f; //ƒWƒƒƒ“ƒvƒpƒ[
-    public float gravity = 20.0f; //d—Í
+    public float moveSpeed = 5.0f; //ç§»å‹•ã‚¹ãƒ”ãƒ¼ãƒ‰
+    public float jumpForce = 8.0f; //ã‚¸ãƒ£ãƒ³ãƒ—ãƒ‘ãƒ¯ãƒ¼
+    public float gravity = 20.0f; //é‡åŠ›
 
-    Vector3 moveDirection = Vector3.zero; //ˆÚ“®¬•ª
+    Vector3 moveDirection = Vector3.zero; //ç§»å‹•æˆåˆ†
 
-    public GameObject body;@//“_–Å‘ÎÛ
-    bool isDamage; //ƒ_ƒ[ƒWƒtƒ‰ƒO
+    public GameObject body;ã€€//ç‚¹æ»…å¯¾è±¡
+    bool isDamage; //ãƒ€ãƒ¡ãƒ¼ã‚¸ãƒ•ãƒ©ã‚°
 
     AudioSource audioSource;
 
