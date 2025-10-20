@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+//レビュー用PlayerController
 public class PlayerController : MonoBehaviour
 {
    

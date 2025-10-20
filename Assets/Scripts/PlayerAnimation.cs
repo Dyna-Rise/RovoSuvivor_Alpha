@@ -1,5 +1,6 @@
 using UnityEngine;
 
+//ãƒ¬ãƒ“ãƒ¥ãƒ¼ç”¨PlayerAnimation
 public class PlayerAnimation : MonoBehaviour
 {
     public Animator animator;
@@ -9,7 +10,7 @@ public class PlayerAnimation : MonoBehaviour
     void Start()
     {
         controller = GetComponentInParent<CharacterController>();
-        if (controller == null) Debug.LogWarning("CharacterController ‚ªeŠK‘w‚ÉŒ©‚Â‚©‚è‚Ü‚¹‚ñ");
+        if (controller == null) Debug.LogWarning("CharacterController ãŒè¦ªéšå±¤ã«è¦‹ã¤ã‹ã‚Šã¾ã›ã‚“");
     }
 
 
